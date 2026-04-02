@@ -4,6 +4,7 @@ import { join } from 'path';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import hbs = require('hbs');
 import { AppModule } from './app.module';
+import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -12,6 +13,9 @@ async function bootstrap(): Promise<void> {
   app.setViewEngine('hbs');
 
   hbs.registerPartials(join(__dirname, '..', 'views', 'partials'));
+
+  const prismaService = app.get(PrismaService);
+  await prismaService.enableShutdownHooks(app);
 
   const port = Number(process.env.PORT) || 3000;
   await app.listen(port, '0.0.0.0');

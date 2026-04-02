@@ -22,6 +22,7 @@
   "dependencies": {
     "@nestjs/platform-express": "^11.1.17",
     "@nestjs/serve-static": "^5.0.4",
+    "@prisma/client": "^7.6.0",
     "hbs": "^4.2.1"
   },
   "devDependencies": {
