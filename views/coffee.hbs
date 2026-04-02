@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>Всё о кофе</h2>
+
+    <article>
+      <h3>Обжарка: что меняется в зерне</h3>
+      <p>Во время обжарки зелёное зерно нагревается, теряет влагу и начинает активно менять аромат. Появляются карамельные и шоколадные ноты, уменьшается травянистость, зерно становится хрупким — его легче молоть.</p>
+
+      <h3>Степени обжарки (очень коротко)</h3>
+      <ul>
+        <li><strong>Светлая</strong> — ярче кислотность, больше фруктовых нот, вкус “легче”.</li>
+        <li><strong>Средняя</strong> — баланс сладости, кислотности и горчинки.</li>
+        <li><strong>Тёмная</strong> — больше горчинки и “жареных” нот, меньше кислотности, вкус плотнее.</li>
+      </ul>
+
+      <blockquote>
+        Совет: если вкус кажется горьким — попробуй более крупный помол или чуть ниже температуру воды.
+      </blockquote>
+
+      <h3>Помол и хранение</h3>
+      <p>Помол влияет на скорость экстракции: мелкий — быстрее отдаёт вкус, крупный — медленнее. Храни зерно в закрытой упаковке, вдали от тепла и света, и не держи его открытым на воздухе.</p>
+    </article>
+  </section>
+
+  <section>
+    <h2>Простые рецепты дома</h2>
+    <div class="card-grid">
+      {{#each recipes}}
+        {{> recipe_card}}
+      {{/each}}
+    </div>
+  </section>
+
+  <section id="live-posts" aria-labelledby="live-posts-title">
+    <h2 id="live-posts-title">British News</h2>
+
+    <div class="live-controls">
+      <button type="button" class="btn" id="loadPostsBtn">Обновить новости</button>
+      <p class="small-muted" id="filterInfo" aria-live="polite"></p>
+    </div>
+
+    <div id="postsLoader" class="loader is-hidden" aria-label="Загрузка" role="status"></div>
+    <div id="postsError" class="net-error is-hidden" role="alert"></div>
+
+    <div id="postsList" class="list"></div>
+
+    <template id="postTemplate">
+      <div class="item">
+        <div class="item-head">
+          <div>
+            <div class="item-title js-post-title"></div>
+            <div class="item-sub js-post-sub"></div>
+          </div>
+        </div>
+        <p class="item-text js-post-body"></p>
+      </div>
+    </template>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>Адреса кофеен</h2>
+    <p class="small-muted">Выберите ближайшую кофейню — у каждой точки свой телефон и режим работы.</p>
+
+    <div class="card-grid">
+      {{#each addresses}}
+        {{> address_card}}
+      {{/each}}
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

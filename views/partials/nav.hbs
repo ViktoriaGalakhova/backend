@@ -1,0 +1,9 @@
+<nav>
+  <ul>
+    {{#each navItems}}
+      <li>
+        <a href="{{href}}" class="{{#if isActive}}nav__link--active{{/if}}" {{#if isActive}}aria-current="page"{{/if}}>{{label}}</a>
+      </li>
+    {{/each}}
+  </ul>
+</nav>

@@ -1,0 +1,13 @@
+<div class="session-box">
+  {{#if session.isAuthenticated}}
+    <p>Вы вошли как <strong>{{session.userName}}</strong></p>
+    <p><a href="{{session.logoutUrl}}">Выйти</a></p>
+  {{else}}
+    <p>Вы не авторизованы</p>
+    <p>
+      <a href="{{session.loginUrl}}">Войти</a>
+      /
+      <a href="{{session.loginUrl}}">Регистрация</a>
+    </p>
+  {{/if}}
+</div>

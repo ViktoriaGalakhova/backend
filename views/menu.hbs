@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section id="menu">
+    <h2>British Menu</h2>
+
+    <div class="menu-container">
+      {{#each menuSections}}
+        {{> menu_section}}
+      {{/each}}
+    </div>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

@@ -1,0 +1,15 @@
+<article class="menu-item" id="{{id}}">
+  <h3><em>{{title}}</em></h3>
+  <ul>
+    {{#each items}}
+      <li>
+        {{name}} — <strong>{{price}}</strong><br>
+        {{#if imageHeight}}
+          <img src="{{image}}" alt="{{imageAlt}}" height="{{imageHeight}}">
+        {{else}}
+          <img src="{{image}}" alt="{{imageAlt}}" width="{{imageWidth}}">
+        {{/if}}
+      </li>
+    {{/each}}
+  </ul>
+</article>
