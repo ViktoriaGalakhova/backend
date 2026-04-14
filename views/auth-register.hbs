@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>{{authPage.title}}</h2>
+
+    <form class="form-card auth-card" method="post" action="/auth/register">
+      <input type="hidden" name="next" value="{{authPage.next}}">
+
+      <div class="form-row">
+        <label for="registerName"><strong>Имя</strong></label>
+        <input id="registerName" name="displayName" type="text" required minlength="2" maxlength="40" placeholder="Например, Анна">
+      </div>
+
+      <div class="form-row">
+        <label for="registerEmail"><strong>Email</strong></label>
+        <input id="registerEmail" name="email" type="email" required placeholder="name@example.com">
+      </div>
+
+      <div class="form-row">
+        <label for="registerPassword"><strong>Пароль</strong></label>
+        <input id="registerPassword" name="password" type="password" required minlength="6" placeholder="Не менее 6 символов">
+      </div>
+
+      <button type="submit" class="btn">Создать аккаунт</button>
+      <p class="small-muted">Уже зарегистрированы? <a href="/auth/login?next={{authPage.next}}">Войдите в аккаунт</a>.</p>
+    </form>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

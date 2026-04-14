@@ -1,82 +1,94 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{{pageTitle}}</title>
-  <link rel="stylesheet" href="/css/style.css">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/styles/github.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js" defer></script>
-  <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.11.1/lib/common.min.js" defer></script>
-  <script type="module" src="/js/app.js"></script>
-</head>
+{{> head}}
 <body>
 {{> header}}
 
 <main>
   <section>
     <h2>Отзывы</h2>
+    <p class="small-muted">Отзывы теперь сохраняются в базе данных, а новые сообщения появляются у всех посетителей страницы почти сразу.</p>
 
-    <form id="feedbackForm" class="form-card" novalidate>
-      <div class="form-row">
-        <label for="fbName"><strong>Имя</strong></label><br>
-        <input id="fbName" name="name" type="text" required minlength="2" maxlength="40" placeholder="Например, Анна">
-      </div>
+    {{#if canLeaveReview}}
+      <form id="feedbackForm" class="form-card" method="post" action="/reviews" novalidate>
+        <div class="form-row">
+          <label for="fbText"><strong>Ваш отзыв</strong></label>
+          <textarea id="fbText" name="comment" required minlength="10" maxlength="300" rows="5" placeholder="Поделитесь впечатлением о кофе, атмосфере или сервисе."></textarea>
+          <p class="field-hint">От 10 до 300 символов. Переносы строк сохраняются.</p>
+          <div class="md-preview" id="mdPreview" aria-live="polite">Здесь появится предварительный просмотр текста.</div>
+        </div>
 
-      <div class="form-row">
-        <label for="fbEmail"><strong>Email</strong></label><br>
-        <input id="fbEmail" name="email" type="email" required placeholder="name@example.com">
-      </div>
-
-      <div class="form-row">
-        <label for="fbText"><strong>Отзыв</strong></label><br>
-        <textarea id="fbText" name="text" required minlength="10" maxlength="300" rows="4" placeholder="Напиши пару предложений..."></textarea>
-
-        <p class="field-hint">
-          Поддерживается Markdown: **жирный**, *курсив*, списки, ```код```.
+        <button type="submit" class="btn">Опубликовать отзыв</button>
+      </form>
+    {{else}}
+      <div class="form-card">
+        <p>Чтобы оставить отзыв, войдите в аккаунт или создайте новый.</p>
+        <p>
+          <a href="{{session.loginUrl}}">Войти</a>
+          /
+          <a href="{{session.registerUrl}}">Зарегистрироваться</a>
         </p>
-
-        <div class="md-preview" id="mdPreview" aria-label="Предпросмотр отзыва (Markdown)"></div>
       </div>
-
-      <button type="submit" class="btn">Добавить</button>
-      <p id="formError" class="form-error" aria-live="polite"></p>
-    </form>
+    {{/if}}
   </section>
 
   <section>
-    <h2>Список отзывов</h2>
+    <div class="section-head">
+      <h2>Лента отзывов</h2>
+      <div id="reviewStatus" class="small-muted" aria-live="polite"></div>
+    </div>
 
-    <div id="feedbackList" class="list"></div>
+    <div
+      id="feedbackList"
+      class="list"
+      data-user-id="{{session.userId}}"
+    >
+      {{#each reviews}}
+        {{> review_item}}
+      {{/each}}
+    </div>
 
-    <template id="feedbackItemTemplate">
-      <div class="item" data-id="">
+    <p id="reviewsEmptyState" class="empty-state {{#if reviews.length}}is-hidden{{/if}}">
+      Пока отзывов нет. Станьте первым гостем, который поделится впечатлениями.
+    </p>
+
+    <template id="reviewTemplate">
+      <article class="item review-item" data-review-id="" data-author-id="">
         <div class="item-head">
           <div>
-            <div class="item-title"></div>
-            <div class="item-sub"></div>
+            <div class="item-title js-review-author"></div>
+            <div class="item-sub js-review-email"></div>
+            <div class="item-meta">
+              <span class="js-review-created"></span>
+              <span class="js-review-updated is-hidden"></span>
+            </div>
           </div>
 
-          <div class="item-actions">
+          <div class="item-actions is-hidden">
             <button type="button" class="btn btn-small js-edit">Редактировать</button>
             <button type="button" class="btn btn-small btn-danger js-delete">Удалить</button>
           </div>
         </div>
 
-        <div class="item-text"></div>
+        <p class="item-text js-review-text"></p>
 
         <form class="edit-form is-hidden" novalidate>
-          <textarea class="edit-text" required minlength="10" maxlength="300" rows="3"></textarea>
+          <label>
+            <span class="sr-only">Новый текст отзыва</span>
+            <textarea class="edit-text" required minlength="10" maxlength="300" rows="4"></textarea>
+          </label>
           <div class="edit-actions">
             <button type="submit" class="btn btn-small">Сохранить</button>
             <button type="button" class="btn btn-small js-cancel">Отмена</button>
           </div>
           <p class="edit-error" aria-live="polite"></p>
         </form>
-      </div>
+      </article>
     </template>
   </section>
 </main>
+
+<div id="toastContainer" class="toast-stack" aria-live="polite" aria-atomic="true"></div>
 
 {{> footer}}
 </body>

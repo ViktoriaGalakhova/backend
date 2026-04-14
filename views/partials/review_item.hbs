@@ -1,0 +1,35 @@
+<article class="item review-item" data-review-id="{{id}}" data-author-id="{{authorId}}">
+  <div class="item-head">
+    <div>
+      <div class="item-title">{{authorName}}</div>
+      <div class="item-sub">{{authorEmail}}</div>
+      <div class="item-meta">
+        <span>{{createdAtLabel}}</span>
+        {{#if wasEdited}}
+          <span>Обновлено: {{updatedAtLabel}}</span>
+        {{/if}}
+      </div>
+    </div>
+
+    {{#if canManage}}
+      <div class="item-actions">
+        <button type="button" class="btn btn-small js-edit">Редактировать</button>
+        <button type="button" class="btn btn-small btn-danger js-delete">Удалить</button>
+      </div>
+    {{/if}}
+  </div>
+
+  <p class="item-text">{{comment}}</p>
+
+  <form class="edit-form is-hidden" novalidate>
+    <label>
+      <span class="sr-only">Новый текст отзыва</span>
+      <textarea class="edit-text" required minlength="10" maxlength="300" rows="4">{{comment}}</textarea>
+    </label>
+    <div class="edit-actions">
+      <button type="submit" class="btn btn-small">Сохранить</button>
+      <button type="button" class="btn btn-small js-cancel">Отмена</button>
+    </div>
+    <p class="edit-error" aria-live="polite"></p>
+  </form>
+</article>

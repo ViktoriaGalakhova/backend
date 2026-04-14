@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>{{authPage.title}}</h2>
+
+    <form class="form-card auth-card" method="post" action="/auth/login">
+      <input type="hidden" name="next" value="{{authPage.next}}">
+
+      <div class="form-row">
+        <label for="loginEmail"><strong>Email</strong></label>
+        <input id="loginEmail" name="email" type="email" required placeholder="name@example.com">
+      </div>
+
+      <div class="form-row">
+        <label for="loginPassword"><strong>Пароль</strong></label>
+        <input id="loginPassword" name="password" type="password" required minlength="6" placeholder="Не менее 6 символов">
+      </div>
+
+      <button type="submit" class="btn">Войти</button>
+      <p class="small-muted">Если аккаунта ещё нет, <a href="/auth/register?next={{authPage.next}}">зарегистрируйтесь</a>.</p>
+    </form>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

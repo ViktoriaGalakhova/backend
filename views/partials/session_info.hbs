@@ -3,11 +3,11 @@
     <p>Вы вошли как <strong>{{session.userName}}</strong></p>
     <p><a href="{{session.logoutUrl}}">Выйти</a></p>
   {{else}}
-    <p>Вы не авторизованы</p>
+    <p>Вы пока не вошли в аккаунт</p>
     <p>
       <a href="{{session.loginUrl}}">Войти</a>
       /
-      <a href="{{session.loginUrl}}">Регистрация</a>
+      <a href="{{session.registerUrl}}">Зарегистрироваться</a>
     </p>
   {{/if}}
 </div>

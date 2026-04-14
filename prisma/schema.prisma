@@ -1,111 +1,43 @@
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider = "sqlite"
+  url      = "file:./dev.db"
 }
 
 generator client {
   provider = "prisma-client-js"
 }
 
-enum OrderStatus {
-  NEW
-  IN_PROGRESS
-  READY
-  COMPLETED
-  CANCELLED
-}
-
-model Customer {
+model User {
   id        Int      @id @default(autoincrement())
-  fullName  String
+  displayName  String
   email     String   @unique
-  phone     String?
+  passwordHash String
   createdAt DateTime @default(now())
 
-  orders  Order[]
   reviews Review[]
+  sessions Session[]
 }
 
-model CafeLocation {
+model Session {
   id           Int      @id @default(autoincrement())
-  name         String
-  address      String
-  phone        String
-  openingHours String
+  token        String   @unique
+  userId       Int
+  expiresAt    DateTime
   createdAt    DateTime @default(now())
 
-  orders  Order[]
-  reviews Review[]
-}
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-model Category {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  description String?
-
-  products Product[]
-}
-
-model Product {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String?
-  price       Decimal  @db.Decimal(10, 2)
-  imageUrl    String?
-  isAvailable Boolean  @default(true)
-  categoryId  Int
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  category   Category    @relation(fields: [categoryId], references: [id])
-  orderItems OrderItem[]
-
-  @@index([categoryId])
-}
-
-model Order {
-  id             Int         @id @default(autoincrement())
-  customerId     Int
-  cafeLocationId Int
-  status         OrderStatus @default(NEW)
-  totalAmount    Decimal     @db.Decimal(10, 2)
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-
-  customer     Customer     @relation(fields: [customerId], references: [id])
-  cafeLocation CafeLocation @relation(fields: [cafeLocationId], references: [id])
-  items        OrderItem[]
-
-  @@index([customerId])
-  @@index([cafeLocationId])
-}
-
-model OrderItem {
-  id        Int     @id @default(autoincrement())
-  orderId   Int
-  productId Int
-  quantity  Int
-  unitPrice Decimal @db.Decimal(10, 2)
-
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id])
-
-  @@index([orderId])
-  @@index([productId])
-  @@unique([orderId, productId])
+  @@index([userId])
 }
 
 model Review {
   id             Int      @id @default(autoincrement())
-  customerId     Int
-  cafeLocationId Int
-  rating         Int
+  authorId       Int
   comment        String
   createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
-  customer     Customer     @relation(fields: [customerId], references: [id])
-  cafeLocation CafeLocation @relation(fields: [cafeLocationId], references: [id])
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
-  @@index([customerId])
-  @@index([cafeLocationId])
+  @@index([authorId])
 }
