@@ -28,6 +28,11 @@ export class ReviewsController {
     return this.reviewsService.getAllForView(user?.id ?? null);
   }
 
+  @Sse('events')
+  stream() {
+    return this.reviewsService.stream();
+  }
+
   @Get(':id')
   async getOne(@Req() req: Request, @Param('id') id: string) {
     const user = await this.authService.getSessionUser(req);
@@ -75,7 +80,11 @@ export class ReviewsController {
       throw new ForbiddenException('Сначала войдите в аккаунт.');
     }
 
-    const review = await this.reviewsService.update(Number(id), user.id, comment);
+    const review = await this.reviewsService.update(
+      Number(id),
+      user.id,
+      comment,
+    );
     return { review };
   }
 
@@ -89,10 +98,5 @@ export class ReviewsController {
 
     await this.reviewsService.remove(Number(id), user.id);
     return { ok: true };
-  }
-
-  @Sse('stream')
-  stream() {
-    return this.reviewsService.stream();
   }
 }

@@ -182,7 +182,7 @@ async function deleteReview(review, emptyState, status) {
 }
 
 function connectReviewsStream(list, template, emptyState, status, currentUserId) {
-  const source = new EventSource('/reviews/stream');
+  const source = new EventSource('/reviews/events');
 
   source.addEventListener('reviews', (event) => {
     const payload = JSON.parse(event.data);
