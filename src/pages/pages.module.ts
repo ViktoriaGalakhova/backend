@@ -1,13 +1,11 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module';
 import { ReviewsModule } from '../reviews/reviews.module';
 import { PagesController } from './pages.controller';
-import { PagesService } from './pages.service';
+import { PagesDataModule } from './pages-data.module';
 
 @Module({
-  imports: [forwardRef(() => AuthModule), ReviewsModule],
+  imports: [PagesDataModule, AuthModule, ReviewsModule],
   controllers: [PagesController],
-  providers: [PagesService],
-  exports: [PagesService],
 })
 export class PagesModule {}
