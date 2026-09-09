@@ -1,6 +1,8 @@
 import { Controller, Get, Query, Render, Req } from '@nestjs/common';
 import type { Request } from 'express';
 import { AuthService } from '../auth/auth.service';
+import { CatalogService } from '../catalog/catalog.service';
+import { LocationsService } from '../locations/locations.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { PagesService } from './pages.service';
 
@@ -10,6 +12,8 @@ export class PagesController {
     private readonly pagesService: PagesService,
     private readonly authService: AuthService,
     private readonly reviewsService: ReviewsService,
+    private readonly catalogService: CatalogService,
+    private readonly locationsService: LocationsService,
   ) {}
 
   @Get()
@@ -47,7 +51,7 @@ export class PagesController {
         notice ?? error,
         error ? 'error' : 'success',
       ),
-      menuSections: this.pagesService.getMenuSections(),
+      menuSections: await this.catalogService.getMenuSections(),
     };
   }
 
@@ -77,7 +81,7 @@ export class PagesController {
         'Адреса | British Coffee Shop',
         user,
       ),
-      addresses: this.pagesService.getAddresses(),
+      addresses: await this.locationsService.getAddresses(),
     };
   }
 

@@ -14,117 +14,6 @@ export class PagesService {
     { href: '/feedback', label: 'Отзывы' },
   ];
 
-  private readonly menuSections = [
-    {
-      id: 'hot',
-      title: 'Горячие напитки',
-      items: [
-        {
-          name: 'Капучино',
-          price: '200 ₽',
-          image: '/media/cappuccino.png',
-          imageAlt: 'Капучино',
-          imageHeight: 100,
-        },
-        {
-          name: 'Латте',
-          price: '220 ₽',
-          image: '/media/latte.png',
-          imageAlt: 'Латте',
-          imageHeight: 110,
-        },
-        {
-          name: 'Эспрессо',
-          price: '150 ₽',
-          image: '/media/espresso.png',
-          imageAlt: 'Эспрессо',
-          imageHeight: 80,
-        },
-      ],
-    },
-    {
-      id: 'cold',
-      title: 'Холодные напитки',
-      items: [
-        {
-          name: 'Айс-латте',
-          price: '230 ₽',
-          image: '/media/iced-latte.png',
-          imageAlt: 'Айс-латте',
-          imageHeight: 120,
-        },
-        {
-          name: 'Фраппе',
-          price: '250 ₽',
-          image: '/media/frappe.png',
-          imageAlt: 'Фраппе',
-          imageHeight: 120,
-        },
-        {
-          name: 'Молочный коктейль',
-          price: '210 ₽',
-          image: '/media/milkshake.png',
-          imageAlt: 'Молочный коктейль',
-          imageHeight: 120,
-        },
-      ],
-    },
-    {
-      id: 'desserts',
-      title: 'Десерты',
-      items: [
-        {
-          name: 'Чизкейк',
-          price: '300 ₽',
-          image: '/media/cheesecake.png',
-          imageAlt: 'Чизкейк',
-          imageWidth: 165,
-        },
-        {
-          name: 'Тирамису',
-          price: '280 ₽',
-          image: '/media/tiramisu.png',
-          imageAlt: 'Тирамису',
-          imageWidth: 165,
-        },
-        {
-          name: 'Штрудель',
-          price: '200 ₽',
-          image: '/media/strudel.png',
-          imageAlt: 'Штрудель',
-          imageWidth: 165,
-        },
-      ],
-    },
-  ];
-
-  private readonly addresses = [
-    {
-      title: 'Невский проспект',
-      address: 'Невский пр., 28, Санкт-Петербург',
-      phone: '+7 (999) 111-22-33',
-      schedule: '08:00-22:00',
-      image: '/media/nevsky.png',
-      imageAlt: 'Кофейня на Невском',
-    },
-    {
-      title: 'Литейный',
-      address: 'Литейный пр., 12, Санкт-Петербург',
-      phone: '+7 (999) 222-33-44',
-      schedule: '09:00-23:00',
-      image: '/media/liteyny.png',
-      imageAlt: 'Кофейня на Литейном',
-    },
-    {
-      title: 'Петроградская',
-      address: 'Кронверкский пр., 4, Санкт-Петербург',
-      phone: '+7 (999) 333-44-55',
-      schedule: '08:30-21:30',
-      image: '/media/petrogradskaya.png',
-      imageAlt: 'Кофейня на Петроградской',
-    },
-  ];
-
   private readonly recipes = [
     {
       title: 'Фильтр-кофе',
@@ -162,14 +51,6 @@ export class PagesService {
     { name: 'Эспрессо', prices: ['150', '—', '—'] },
     { name: 'Айс-латте', prices: ['230', '260', '290'] },
   ];
-
-  getMenuSections() {
-    return this.menuSections;
-  }
-
-  getAddresses() {
-    return this.addresses;
-  }
 
   getRecipes() {
     return this.recipes;

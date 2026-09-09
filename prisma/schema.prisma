@@ -8,22 +8,22 @@ generator client {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id           Int      @id @default(autoincrement())
   displayName  String
-  email     String   @unique
+  email        String   @unique
   passwordHash String
-  createdAt DateTime @default(now())
+  createdAt    DateTime @default(now())
 
-  reviews Review[]
+  reviews  Review[]
   sessions Session[]
 }
 
 model Session {
-  id           Int      @id @default(autoincrement())
-  token        String   @unique
-  userId       Int
-  expiresAt    DateTime
-  createdAt    DateTime @default(now())
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -31,13 +31,49 @@ model Session {
 }
 
 model Review {
-  id             Int      @id @default(autoincrement())
-  authorId       Int
-  comment        String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  authorId  Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@index([authorId])
+}
+
+model Category {
+  id          Int      @id @default(autoincrement())
+  slug        String   @unique
+  title       String
+  description String?
+  createdAt   DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  price       Int
+  imageUrl    String
+  isAvailable Boolean  @default(true)
+  categoryId  Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@index([categoryId])
+}
+
+model CafeLocation {
+  id           Int      @id @default(autoincrement())
+  name         String
+  address      String
+  phone        String
+  openingHours String
+  imageUrl     String
+  createdAt    DateTime @default(now())
 }
