@@ -6,6 +6,19 @@ import {
 import type { MessageEvent } from '@nestjs/common';
 import { Subject } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
+import { paginate, PaginatedResult } from '../common/pagination';
+import { CreateReviewDto } from './dto/create-review.dto';
+import { ReviewResponseDto } from './dto/review-response.dto';
+import { UpdateReviewDto } from './dto/update-review.dto';
+
+type ReviewWithAuthor = {
+  id: number;
+  authorId: number;
+  comment: string;
+  createdAt: Date;
+  updatedAt: Date;
+  author: { displayName: string; email: string };
+};
 
 type ReviewView = {
   id: number;
@@ -38,15 +51,7 @@ export class ReviewsService {
     reviewId: number,
     currentUserId: number | null,
   ): Promise<ReviewView> {
-    const review = await this.prisma.review.findUnique({
-      where: { id: reviewId },
-      include: { author: true },
-    });
-
-    if (!review) {
-      throw new NotFoundException('Отзыв не найден.');
-    }
-
+    const review = await this.findReviewOrFail(reviewId);
     return this.toReviewView(review, currentUserId);
   }
 
@@ -69,14 +74,7 @@ export class ReviewsService {
     authorId: number,
     comment: string,
   ): Promise<ReviewView> {
-    const review = await this.prisma.review.findUnique({
-      where: { id: reviewId },
-      include: { author: true },
-    });
-
-    if (!review) {
-      throw new NotFoundException('Отзыв не найден.');
-    }
+    const review = await this.findReviewOrFail(reviewId);
 
     if (review.authorId !== authorId) {
       throw new ForbiddenException('Можно редактировать только свои отзывы.');
@@ -94,59 +92,150 @@ export class ReviewsService {
   }
 
   async remove(reviewId: number, authorId: number): Promise<void> {
-    const review = await this.prisma.review.findUnique({
-      where: { id: reviewId },
-    });
-
-    if (!review) {
-      throw new NotFoundException('Отзыв не найден.');
-    }
+    const review = await this.findReviewOrFail(reviewId);
 
     if (review.authorId !== authorId) {
       throw new ForbiddenException('Можно удалять только свои отзывы.');
     }
 
     await this.prisma.review.delete({ where: { id: reviewId } });
-    this.emit('deleted', {
-      id: reviewId,
-      authorId,
-      authorName: '',
-      authorEmail: '',
-      comment: '',
-      createdAtLabel: '',
-      updatedAtLabel: '',
-      wasEdited: false,
-      canManage: true,
+    this.emitDeleted(this.toReviewView(review, authorId));
+  }
+
+  async findAll(
+    page: number,
+    limit: number,
+    authorId?: number,
+  ): Promise<PaginatedResult<ReviewResponseDto>> {
+    const where = authorId ? { authorId } : {};
+
+    const [reviews, total] = await Promise.all([
+      this.prisma.review.findMany({
+        where,
+        include: { author: true },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      this.prisma.review.count({ where }),
+    ]);
+
+    return paginate(
+      reviews.map((review) => this.toReviewResponse(review)),
+      total,
+      page,
+      limit,
+    );
+  }
+
+  async findOne(reviewId: number): Promise<ReviewResponseDto> {
+    const review = await this.findReviewOrFail(reviewId);
+    return this.toReviewResponse(review);
+  }
+
+  async findOneByAuthor(
+    authorId: number,
+    reviewId: number,
+  ): Promise<ReviewResponseDto> {
+    const review = await this.findReviewOrFail(reviewId);
+
+    if (review.authorId !== authorId) {
+      throw new NotFoundException('Отзыв не принадлежит этому пользователю.');
+    }
+
+    return this.toReviewResponse(review);
+  }
+
+  async createForApi(dto: CreateReviewDto): Promise<ReviewResponseDto> {
+    const author = await this.prisma.user.findUnique({
+      where: { id: dto.authorId },
+      select: { id: true },
     });
+
+    if (!author) {
+      throw new NotFoundException('Пользователь не найден.');
+    }
+
+    const review = await this.prisma.review.create({
+      data: { authorId: dto.authorId, comment: dto.comment.trim() },
+      include: { author: true },
+    });
+
+    this.emit('created', this.toReviewView(review, null));
+    return this.toReviewResponse(review);
+  }
+
+  async updateForApi(
+    reviewId: number,
+    dto: UpdateReviewDto,
+  ): Promise<ReviewResponseDto> {
+    await this.findReviewOrFail(reviewId);
+
+    const review = await this.prisma.review.update({
+      where: { id: reviewId },
+      data: { comment: dto.comment.trim() },
+      include: { author: true },
+    });
+
+    this.emit('updated', this.toReviewView(review, null));
+    return this.toReviewResponse(review);
+  }
+
+  async removeForApi(reviewId: number): Promise<void> {
+    const review = await this.findReviewOrFail(reviewId);
+    await this.prisma.review.delete({ where: { id: reviewId } });
+    this.emitDeleted(this.toReviewView(review, null));
   }
 
   stream() {
     return this.updates$.asObservable();
   }
 
+  private async findReviewOrFail(reviewId: number): Promise<ReviewWithAuthor> {
+    const review = await this.prisma.review.findUnique({
+      where: { id: reviewId },
+      include: { author: true },
+    });
+
+    if (!review) {
+      throw new NotFoundException('Отзыв не найден.');
+    }
+
+    return review;
+  }
+
   private normalizeComment(comment: string): string {
     const normalized = comment.trim().replace(/\r\n/g, '\n');
 
     if (normalized.length < 10) {
-      throw new ForbiddenException('Отзыв должен содержать хотя бы 10 символов.');
+      throw new ForbiddenException(
+        'Отзыв должен содержать хотя бы 10 символов.',
+      );
     }
 
     if (normalized.length > 300) {
-      throw new ForbiddenException('Отзыв не должен быть длиннее 300 символов.');
+      throw new ForbiddenException(
+        'Отзыв не должен быть длиннее 300 символов.',
+      );
     }
 
     return normalized;
   }
 
+  private toReviewResponse(review: ReviewWithAuthor): ReviewResponseDto {
+    return {
+      id: review.id,
+      authorId: review.authorId,
+      authorName: review.author.displayName,
+      authorEmail: review.author.email,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      updatedAt: review.updatedAt,
+    };
+  }
+
   private toReviewView(
-    review: {
-      id: number;
-      authorId: number;
-      comment: string;
-      createdAt: Date;
-      updatedAt: Date;
-      author: { displayName: string; email: string };
-    },
+    review: ReviewWithAuthor,
     currentUserId: number | null,
   ): ReviewView {
     return {
@@ -162,13 +251,17 @@ export class ReviewsService {
     };
   }
 
-  private emit(type: 'created' | 'updated' | 'deleted', review: ReviewView) {
+  private emit(type: 'created' | 'updated', review: ReviewView) {
     this.updates$.next({
       type: 'reviews',
-      data: {
-        type,
-        review,
-      },
+      data: { type, review },
+    });
+  }
+
+  private emitDeleted(review: ReviewView) {
+    this.updates$.next({
+      type: 'reviews',
+      data: { type: 'deleted', review },
     });
   }
 

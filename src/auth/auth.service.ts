@@ -70,7 +70,9 @@ export class AuthService {
     }
 
     if (normalizedPassword.length < 6) {
-      throw new ConflictException('Пароль должен содержать хотя бы 6 символов.');
+      throw new ConflictException(
+        'Пароль должен содержать хотя бы 6 символов.',
+      );
     }
 
     const existingUser = await this.prisma.user.findUnique({
@@ -147,8 +149,9 @@ export class AuthService {
       return null;
     }
 
-    const cookies = cookieHeader.split(';').reduce<Record<string, string>>(
-      (accumulator, chunk) => {
+    const cookies = cookieHeader
+      .split(';')
+      .reduce<Record<string, string>>((accumulator, chunk) => {
         const [rawKey, ...rawValueParts] = chunk.trim().split('=');
 
         if (!rawKey) {
@@ -157,9 +160,7 @@ export class AuthService {
 
         accumulator[rawKey] = decodeURIComponent(rawValueParts.join('='));
         return accumulator;
-      },
-      {},
-    );
+      }, {});
 
     return cookies[this.sessionCookieName] ?? null;
   }
@@ -188,7 +189,7 @@ export class AuthService {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
-  private async hashPassword(password: string): Promise<string> {
+  async hashPassword(password: string): Promise<string> {
     const salt = randomBytes(16).toString('hex');
     const derivedKey = (await scrypt(password, salt, 64)) as Buffer;
 

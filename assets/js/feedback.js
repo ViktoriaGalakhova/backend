@@ -132,6 +132,7 @@ async function saveReview(review, emptyState, status) {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({ comment }),
     });
@@ -166,6 +167,9 @@ async function deleteReview(review, emptyState, status) {
   try {
     const response = await fetch(`/reviews/${reviewId}`, {
       method: 'DELETE',
+      headers: {
+        Accept: 'application/json',
+      },
     });
 
     if (!response.ok) {
