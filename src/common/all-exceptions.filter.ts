@@ -5,6 +5,7 @@ import {
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
+import { GqlContextType } from '@nestjs/graphql';
 import { Prisma } from '@prisma/client';
 import type { Request, Response } from 'express';
 import { PagesService } from '../pages/pages.service';
@@ -18,7 +19,11 @@ type NormalizedError = {
 export class AllExceptionsFilter implements ExceptionFilter {
   constructor(private readonly pagesService: PagesService) {}
 
-  catch(exception: unknown, host: ArgumentsHost): void {
+  catch(exception: unknown, host: ArgumentsHost): unknown {
+    if (host.getType<GqlContextType>() === 'graphql') {
+      return exception;
+    }
+
     const context = host.switchToHttp();
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();
@@ -31,7 +36,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
         path: request.originalUrl,
         timestamp: new Date().toISOString(),
       });
-      return;
+      return undefined;
     }
 
     response.status(statusCode).render('error', {
@@ -43,6 +48,8 @@ export class AllExceptionsFilter implements ExceptionFilter {
       statusCode,
       errorMessage: Array.isArray(message) ? message.join(' ') : message,
     });
+
+    return undefined;
   }
 
   private wantsJson(request: Request): boolean {

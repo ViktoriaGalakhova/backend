@@ -1,0 +1,450 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+"""Кофейня сети"""
+type CafeLocation {
+  """Адрес кофейни"""
+  address: String!
+
+  """Дата добавления кофейни"""
+  createdAt: DateTime!
+
+  """Идентификатор кофейни"""
+  id: Int!
+
+  """Ссылка на фотографию кофейни"""
+  imageUrl: String!
+
+  """Название кофейни"""
+  name: String!
+
+  """Часы работы в формате ЧЧ:ММ-ЧЧ:ММ"""
+  openingHours: String!
+
+  """Контактный телефон"""
+  phone: String!
+}
+
+"""Страница списка кофеен"""
+type CafeLocationPage {
+  """Кофейни текущей страницы"""
+  items: [CafeLocation!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}
+
+"""Раздел меню"""
+type Category {
+  """Дата создания раздела"""
+  createdAt: DateTime!
+
+  """Описание раздела"""
+  description: String
+
+  """Идентификатор раздела"""
+  id: Int!
+
+  """Позиции раздела меню постранично"""
+  products(pagination: PaginationInput! = {limit: 10, page: 1}): ProductPage!
+
+  """Количество позиций в разделе"""
+  productsCount: Int!
+
+  """Машинный идентификатор раздела"""
+  slug: String!
+
+  """Название раздела"""
+  title: String!
+}
+
+"""Страница списка разделов меню"""
+type CategoryPage {
+  """Разделы текущей страницы"""
+  items: [Category!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}
+
+"""Данные для добавления кофейни"""
+input CreateCafeLocationInput {
+  """Адрес кофейни"""
+  address: String!
+
+  """Ссылка на фотографию кофейни"""
+  imageUrl: String!
+
+  """Название кофейни"""
+  name: String!
+
+  """Часы работы в формате ЧЧ:ММ-ЧЧ:ММ"""
+  openingHours: String!
+
+  """Контактный телефон"""
+  phone: String!
+}
+
+"""Данные для создания раздела меню"""
+input CreateCategoryInput {
+  """Описание раздела"""
+  description: String
+
+  """Машинный идентификатор раздела"""
+  slug: String!
+
+  """Название раздела"""
+  title: String!
+}
+
+"""Данные для добавления позиции меню"""
+input CreateProductInput {
+  """Идентификатор раздела меню"""
+  categoryId: Int!
+
+  """Описание позиции"""
+  description: String
+
+  """Ссылка на изображение позиции"""
+  imageUrl: String!
+
+  """Название позиции"""
+  name: String!
+
+  """Цена в рублях"""
+  price: Int!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type Mutation {
+  """Добавить кофейню в сеть"""
+  addCafeLocation(input: CreateCafeLocationInput!): CafeLocation!
+
+  """Добавить позицию в меню"""
+  addProduct(input: CreateProductInput!): Product!
+
+  """Изменить часы работы кофейни"""
+  changeCafeOpeningHours(locationId: Int!, openingHours: String!): CafeLocation!
+
+  """Изменить почту пользователя"""
+  changeUserEmail(email: String!, userId: Int!): User!
+
+  """Изменить пароль пользователя"""
+  changeUserPassword(password: String!, userId: Int!): User!
+
+  """Закрыть сессию пользователя"""
+  closeSession(sessionId: Int!, userId: Int!): Boolean!
+
+  """Создать раздел меню"""
+  createCategory(input: CreateCategoryInput!): Category!
+
+  """Удалить раздел меню"""
+  deleteCategory(categoryId: Int!): Boolean!
+
+  """Удалить отзыв"""
+  deleteReview(reviewId: Int!): Boolean!
+
+  """Удалить пользователя"""
+  deleteUser(userId: Int!): Boolean!
+
+  """Изменить текст отзыва"""
+  editReview(comment: String!, reviewId: Int!): Review!
+
+  """Вернуть позицию в продажу"""
+  makeProductAvailable(productId: Int!): Product!
+
+  """Снять позицию с продажи"""
+  makeProductUnavailable(productId: Int!): Product!
+
+  """Открыть новую сессию пользователя"""
+  openSession(ttlDays: Int! = 30, userId: Int!): Session!
+
+  """Продлить срок жизни сессии"""
+  prolongSession(sessionId: Int!, ttlDays: Int!, userId: Int!): Session!
+
+  """Опубликовать новый отзыв"""
+  publishReview(input: PublishReviewInput!): Review!
+
+  """Зарегистрировать нового пользователя"""
+  registerUser(input: RegisterUserInput!): User!
+
+  """Убрать кофейню из сети"""
+  removeCafeLocation(locationId: Int!): Boolean!
+
+  """Удалить позицию из меню"""
+  removeProduct(productId: Int!): Boolean!
+
+  """Изменить отображаемое имя пользователя"""
+  renameUser(displayName: String!, userId: Int!): User!
+
+  """Изменить данные кофейни"""
+  updateCafeLocation(input: UpdateCafeLocationInput!, locationId: Int!): CafeLocation!
+
+  """Изменить раздел меню"""
+  updateCategory(categoryId: Int!, input: UpdateCategoryInput!): Category!
+
+  """Изменить позицию меню"""
+  updateProduct(input: UpdateProductInput!, productId: Int!): Product!
+}
+
+"""Сведения о текущей странице выборки"""
+type PageMeta {
+  """Количество элементов на странице"""
+  limit: Int!
+
+  """Номер текущей страницы"""
+  page: Int!
+
+  """Общее количество страниц"""
+  pageCount: Int!
+
+  """Общее количество элементов"""
+  total: Int!
+}
+
+"""Параметры постраничной выборки"""
+input PaginationInput {
+  """Количество элементов на странице, не больше 100"""
+  limit: Int! = 10
+
+  """Номер страницы, начиная с 1"""
+  page: Int! = 1
+}
+
+"""Позиция меню"""
+type Product {
+  """Раздел меню, к которому относится позиция"""
+  category: Category!
+
+  """Идентификатор раздела меню"""
+  categoryId: Int!
+
+  """Дата создания позиции"""
+  createdAt: DateTime!
+
+  """Описание позиции"""
+  description: String
+
+  """Идентификатор позиции"""
+  id: Int!
+
+  """Ссылка на изображение позиции"""
+  imageUrl: String!
+
+  """Доступна ли позиция к заказу"""
+  isAvailable: Boolean!
+
+  """Название позиции"""
+  name: String!
+
+  """Цена в рублях"""
+  price: Int!
+
+  """Дата последнего изменения позиции"""
+  updatedAt: DateTime!
+}
+
+"""Страница списка позиций меню"""
+type ProductPage {
+  """Позиции текущей страницы"""
+  items: [Product!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}
+
+"""Данные для публикации отзыва"""
+input PublishReviewInput {
+  """Идентификатор автора отзыва"""
+  authorId: Int!
+
+  """Текст отзыва"""
+  comment: String!
+}
+
+type Query {
+  """Кофейня по идентификатору"""
+  cafeLocation(locationId: Int!): CafeLocation!
+
+  """Список кофеен сети постранично"""
+  cafeLocations(pagination: PaginationInput! = {limit: 10, page: 1}): CafeLocationPage!
+
+  """Список разделов меню постранично"""
+  menuCategories(pagination: PaginationInput! = {limit: 10, page: 1}): CategoryPage!
+
+  """Раздел меню по идентификатору"""
+  menuCategory(categoryId: Int!): Category!
+
+  """Позиция меню по идентификатору"""
+  product(productId: Int!): Product!
+
+  """Список позиций меню постранично"""
+  products(categoryId: Int, pagination: PaginationInput! = {limit: 10, page: 1}): ProductPage!
+
+  """Отзыв по идентификатору"""
+  review(reviewId: Int!): Review!
+
+  """Список отзывов постранично"""
+  reviews(authorId: Int, pagination: PaginationInput! = {limit: 10, page: 1}): ReviewPage!
+
+  """Пользователь по идентификатору"""
+  user(userId: Int!): User!
+
+  """Список пользователей постранично"""
+  users(pagination: PaginationInput! = {limit: 10, page: 1}): UserPage!
+}
+
+"""Данные для регистрации пользователя"""
+input RegisterUserInput {
+  """Отображаемое имя"""
+  displayName: String!
+
+  """Электронная почта"""
+  email: String!
+
+  """Пароль пользователя"""
+  password: String!
+}
+
+"""Отзыв о кофейне"""
+type Review {
+  """Автор отзыва"""
+  author: User!
+
+  """Идентификатор автора отзыва"""
+  authorId: Int!
+
+  """Текст отзыва"""
+  comment: String!
+
+  """Дата публикации отзыва"""
+  createdAt: DateTime!
+
+  """Идентификатор отзыва"""
+  id: Int!
+
+  """Дата последнего изменения отзыва"""
+  updatedAt: DateTime!
+}
+
+"""Страница списка отзывов"""
+type ReviewPage {
+  """Отзывы текущей страницы"""
+  items: [Review!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}
+
+"""Сессия пользователя"""
+type Session {
+  """Дата открытия сессии"""
+  createdAt: DateTime!
+
+  """Дата истечения сессии"""
+  expiresAt: DateTime!
+
+  """Идентификатор сессии"""
+  id: Int!
+
+  """Токен сессии"""
+  token: String!
+
+  """Идентификатор владельца сессии"""
+  userId: Int!
+}
+
+"""Страница списка сессий"""
+type SessionPage {
+  """Сессии текущей страницы"""
+  items: [Session!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}
+
+"""Данные для изменения кофейни"""
+input UpdateCafeLocationInput {
+  """Адрес кофейни"""
+  address: String
+
+  """Ссылка на фотографию кофейни"""
+  imageUrl: String
+
+  """Название кофейни"""
+  name: String
+
+  """Часы работы в формате ЧЧ:ММ-ЧЧ:ММ"""
+  openingHours: String
+
+  """Контактный телефон"""
+  phone: String
+}
+
+"""Данные для изменения раздела меню"""
+input UpdateCategoryInput {
+  """Описание раздела"""
+  description: String
+
+  """Машинный идентификатор раздела"""
+  slug: String
+
+  """Название раздела"""
+  title: String
+}
+
+"""Данные для изменения позиции меню"""
+input UpdateProductInput {
+  """Идентификатор раздела меню"""
+  categoryId: Int
+
+  """Описание позиции"""
+  description: String
+
+  """Ссылка на изображение позиции"""
+  imageUrl: String
+
+  """Название позиции"""
+  name: String
+
+  """Цена в рублях"""
+  price: Int
+}
+
+"""Посетитель кофейни"""
+type User {
+  """Дата регистрации"""
+  createdAt: DateTime!
+
+  """Отображаемое имя"""
+  displayName: String!
+
+  """Электронная почта"""
+  email: String!
+
+  """Идентификатор пользователя"""
+  id: Int!
+
+  """Отзывы пользователя постранично"""
+  reviews(pagination: PaginationInput! = {limit: 10, page: 1}): ReviewPage!
+
+  """Количество оставленных отзывов"""
+  reviewsCount: Int!
+
+  """Сессии пользователя постранично"""
+  sessions(pagination: PaginationInput! = {limit: 10, page: 1}): SessionPage!
+}
+
+"""Страница списка пользователей"""
+type UserPage {
+  """Пользователи текущей страницы"""
+  items: [User!]!
+
+  """Сведения о странице"""
+  meta: PageMeta!
+}

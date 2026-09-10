@@ -5,6 +5,7 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { CatalogModule } from './catalog/catalog.module';
 import { AllExceptionsFilter } from './common/all-exceptions.filter';
+import { GraphqlApiModule } from './graphql/graphql-api.module';
 import { LocationsModule } from './locations/locations.module';
 import { MediaModule } from './media/media.module';
 import { PagesDataModule } from './pages/pages-data.module';
@@ -30,6 +31,7 @@ import { UsersModule } from './users/users.module';
     CatalogModule,
     LocationsModule,
     MediaModule,
+    GraphqlApiModule,
   ],
   providers: [
     {
