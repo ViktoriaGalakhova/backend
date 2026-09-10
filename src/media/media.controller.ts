@@ -1,8 +1,10 @@
 import { Controller, Get, NotFoundException, Param, Res } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { access } from 'fs/promises';
 import { join } from 'path';
 
+@ApiExcludeController()
 @Controller('media')
 export class MediaController {
   @Get(':filename')

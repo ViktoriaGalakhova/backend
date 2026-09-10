@@ -1,4 +1,5 @@
 import { Controller, Get, Query, Render, Req } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { CatalogService } from '../catalog/catalog.service';
@@ -6,6 +7,7 @@ import { LocationsService } from '../locations/locations.service';
 import { ReviewsService } from '../reviews/reviews.service';
 import { PagesService } from './pages.service';
 
+@ApiExcludeController()
 @Controller()
 export class PagesController {
   constructor(

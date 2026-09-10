@@ -11,10 +11,12 @@ import {
   Res,
   Sse,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { AuthService } from '../auth/auth.service';
 import { ReviewsService } from './reviews.service';
 
+@ApiExcludeController()
 @Controller('reviews')
 export class ReviewsController {
   constructor(

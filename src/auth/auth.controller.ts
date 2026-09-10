@@ -10,10 +10,12 @@ import {
   Res,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ApiExcludeController } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { PagesService } from '../pages/pages.service';
 import { AuthService } from './auth.service';
 
+@ApiExcludeController()
 @Controller('auth')
 export class AuthController {
   constructor(
