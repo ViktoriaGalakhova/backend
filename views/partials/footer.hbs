@@ -1,4 +1,7 @@
 <footer>
   <p>Email: info@britishcoffeeshop.ru</p>
   <p>&copy; 2026 British Coffee Shop</p>
+  {{#if serverElapsedMs}}
+    <p class="server-time">Время обработки на сервере: {{serverElapsedMs}} мс</p>
+  {{/if}}
 </footer>

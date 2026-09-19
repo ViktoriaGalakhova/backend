@@ -12,9 +12,14 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -25,9 +30,12 @@ import {
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { linkHeaderDoc } from '../common/api-link-header';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
+import { EtagInterceptor } from '../common/interceptors/etag.interceptor';
 import { setLinkHeader } from '../common/pagination';
+import { imageFileBody, imageFilePipe } from '../storage/image-upload';
 import { CreateLocationDto } from './dto/create-location.dto';
 import {
   LocationResponseDto,
@@ -41,11 +49,13 @@ import { LocationsService } from './locations.service';
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
 })
+@UseInterceptors(EtagInterceptor)
 @Controller('api/locations')
 export class LocationsApiController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @Get()
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить страницу кофеен' })
   @ApiOkResponse({
     description: 'Страница кофеен',
@@ -63,6 +73,7 @@ export class LocationsApiController {
   }
 
   @Get(':id')
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить кофейню по идентификатору' })
   @ApiParam({ name: 'id', description: 'Идентификатор кофейни', example: 1 })
   @ApiOkResponse({ description: 'Кофейня', type: LocationResponseDto })
@@ -100,6 +111,27 @@ export class LocationsApiController {
     @Body() dto: UpdateLocationDto,
   ): Promise<LocationResponseDto> {
     return this.locationsService.update(id, dto);
+  }
+
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(imageFileBody)
+  @ApiOperation({ summary: 'Загрузить фотографию кофейни' })
+  @ApiParam({ name: 'id', description: 'Идентификатор кофейни', example: 1 })
+  @ApiOkResponse({
+    description: 'Кофейня с обновлённой фотографией',
+    type: LocationResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Кофейня не найдена',
+    type: ErrorResponseDto,
+  })
+  uploadImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile(imageFilePipe) file: Express.Multer.File,
+  ): Promise<LocationResponseDto> {
+    return this.locationsService.setImage(id, file);
   }
 
   @Delete(':id')

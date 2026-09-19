@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, Length, Matches } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
 export class CreateLocationDto {
   @ApiProperty({ description: 'Название кофейни', example: 'Невский проспект' })
@@ -30,11 +30,13 @@ export class CreateLocationDto {
   })
   openingHours: string;
 
-  @ApiProperty({
-    description: 'Ссылка на фотографию кофейни',
-    example: '/media/nevsky.png',
+  @ApiPropertyOptional({
+    description:
+      'Ссылка на фотографию кофейни. Обычно заполняется загрузкой файла в объектное хранилище.',
+    example: 'https://storage.yandexcloud.net/bucket/locations/nevsky.png',
   })
+  @IsOptional()
   @IsString()
-  @Length(1, 200)
-  imageUrl: string;
+  @Length(1, 300)
+  imageUrl?: string;
 }

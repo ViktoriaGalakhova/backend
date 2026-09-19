@@ -20,10 +20,14 @@ export class CreateProductInput {
   @Max(100000)
   price: number;
 
-  @Field(() => String, { description: 'Ссылка на изображение позиции' })
+  @Field(() => String, {
+    nullable: true,
+    description: 'Ссылка на изображение позиции',
+  })
+  @IsOptional()
   @IsString()
-  @Length(1, 200)
-  imageUrl: string;
+  @Length(1, 300)
+  imageUrl?: string;
 
   @Field(() => Int, { description: 'Идентификатор раздела меню' })
   @IsInt()

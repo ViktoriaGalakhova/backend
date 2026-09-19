@@ -1,5 +1,5 @@
 import { Field, InputType, PartialType } from '@nestjs/graphql';
-import { IsString, Length, Matches } from 'class-validator';
+import { IsOptional, IsString, Length, Matches } from 'class-validator';
 
 @InputType({ description: 'Данные для добавления кофейни' })
 export class CreateCafeLocationInput {
@@ -23,10 +23,14 @@ export class CreateCafeLocationInput {
   @Matches(/^\d{2}:\d{2}-\d{2}:\d{2}$/)
   openingHours: string;
 
-  @Field(() => String, { description: 'Ссылка на фотографию кофейни' })
+  @Field(() => String, {
+    nullable: true,
+    description: 'Ссылка на фотографию кофейни',
+  })
+  @IsOptional()
   @IsString()
-  @Length(1, 200)
-  imageUrl: string;
+  @Length(1, 300)
+  imageUrl?: string;
 }
 
 @InputType({ description: 'Данные для изменения кофейни' })

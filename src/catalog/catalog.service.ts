@@ -1,6 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import type { Cache } from 'cache-manager';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate, PaginatedResult } from '../common/pagination';
+import { StorageService } from '../storage/storage.service';
 import { CategoryResponseDto } from './dto/category-response.dto';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -19,7 +22,11 @@ type CategoryRecord = {
 
 @Injectable()
 export class CatalogService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+    @Inject(CACHE_MANAGER) private readonly cache: Cache,
+  ) {}
 
   async findCategories(
     page: number,
@@ -98,19 +105,24 @@ export class CatalogService {
     limit: number,
     categoryId?: number,
   ): Promise<PaginatedResult<ProductResponseDto>> {
-    const where = categoryId ? { categoryId } : {};
+    return this.fromCache(
+      `products:${page}:${limit}:${categoryId ?? 'all'}`,
+      async () => {
+        const where = categoryId ? { categoryId } : {};
 
-    const [products, total] = await Promise.all([
-      this.prisma.product.findMany({
-        where,
-        orderBy: { id: 'asc' },
-        skip: (page - 1) * limit,
-        take: limit,
-      }),
-      this.prisma.product.count({ where }),
-    ]);
+        const [products, total] = await Promise.all([
+          this.prisma.product.findMany({
+            where,
+            orderBy: { id: 'asc' },
+            skip: (page - 1) * limit,
+            take: limit,
+          }),
+          this.prisma.product.count({ where }),
+        ]);
 
-    return paginate(products, total, page, limit);
+        return paginate(products, total, page, limit);
+      },
+    );
   }
 
   async findCategoryProducts(
@@ -123,15 +135,17 @@ export class CatalogService {
   }
 
   async findProduct(productId: number): Promise<ProductResponseDto> {
-    const product = await this.prisma.product.findUnique({
-      where: { id: productId },
+    return this.fromCache(`product:${productId}`, async () => {
+      const product = await this.prisma.product.findUnique({
+        where: { id: productId },
+      });
+
+      if (!product) {
+        throw new NotFoundException('Позиция меню не найдена.');
+      }
+
+      return product;
     });
-
-    if (!product) {
-      throw new NotFoundException('Позиция меню не найдена.');
-    }
-
-    return product;
   }
 
   async findCategoryProduct(
@@ -151,16 +165,20 @@ export class CatalogService {
   async createProduct(dto: CreateProductDto): Promise<ProductResponseDto> {
     await this.findCategory(dto.categoryId);
 
-    return this.prisma.product.create({
+    const product = await this.prisma.product.create({
       data: {
         name: dto.name,
         description: dto.description ?? null,
         price: dto.price,
-        imageUrl: dto.imageUrl,
+        imageUrl: dto.imageUrl ?? '',
         isAvailable: dto.isAvailable ?? true,
         categoryId: dto.categoryId,
       },
     });
+
+    await this.cache.clear();
+
+    return product;
   }
 
   async updateProduct(
@@ -173,7 +191,7 @@ export class CatalogService {
       await this.findCategory(dto.categoryId);
     }
 
-    return this.prisma.product.update({
+    const product = await this.prisma.product.update({
       where: { id: productId },
       data: {
         name: dto.name,
@@ -184,11 +202,42 @@ export class CatalogService {
         categoryId: dto.categoryId,
       },
     });
+
+    await this.cache.clear();
+
+    return product;
+  }
+
+  async setProductImage(
+    productId: number,
+    file: Express.Multer.File,
+  ): Promise<ProductResponseDto> {
+    const current = await this.findProduct(productId);
+    const imageUrl = await this.storage.upload(file, 'products');
+
+    const product = await this.prisma.product.update({
+      where: { id: productId },
+      data: { imageUrl },
+    });
+
+    if (current.imageUrl) {
+      await this.storage.remove(current.imageUrl);
+    }
+
+    await this.cache.clear();
+
+    return product;
   }
 
   async removeProduct(productId: number): Promise<void> {
-    await this.findProduct(productId);
+    const product = await this.findProduct(productId);
     await this.prisma.product.delete({ where: { id: productId } });
+
+    if (product.imageUrl) {
+      await this.storage.remove(product.imageUrl);
+    }
+
+    await this.cache.clear();
   }
 
   async getMenuSections() {
@@ -207,6 +256,19 @@ export class CatalogService {
         imageAlt: product.name,
       })),
     }));
+  }
+
+  private async fromCache<T>(key: string, load: () => Promise<T>): Promise<T> {
+    const cached = await this.cache.get<T>(key);
+
+    if (cached) {
+      return cached;
+    }
+
+    const value = await load();
+    await this.cache.set(key, value);
+
+    return value;
   }
 
   private toCategory(category: CategoryRecord): CategoryResponseDto {

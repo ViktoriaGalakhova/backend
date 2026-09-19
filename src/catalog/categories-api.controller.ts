@@ -12,6 +12,7 @@ import {
   Query,
   Req,
   Res,
+  UseInterceptors,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -26,7 +27,9 @@ import {
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { linkHeaderDoc } from '../common/api-link-header';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
+import { EtagInterceptor } from '../common/interceptors/etag.interceptor';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
 import { setLinkHeader } from '../common/pagination';
 import { CatalogService } from './catalog.service';
@@ -45,11 +48,13 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
 })
+@UseInterceptors(EtagInterceptor)
 @Controller('api/categories')
 export class CategoriesApiController {
   constructor(private readonly catalogService: CatalogService) {}
 
   @Get()
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить страницу разделов меню' })
   @ApiOkResponse({
     description: 'Страница разделов меню',
@@ -70,6 +75,7 @@ export class CategoriesApiController {
   }
 
   @Get(':id')
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить раздел меню по идентификатору' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
   @ApiOkResponse({ description: 'Раздел меню', type: CategoryResponseDto })
@@ -131,6 +137,7 @@ export class CategoriesApiController {
   }
 
   @Get(':id/products')
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить страницу позиций выбранного раздела' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
   @ApiOkResponse({
@@ -158,6 +165,7 @@ export class CategoriesApiController {
   }
 
   @Get(':id/products/:productId')
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить позицию выбранного раздела' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
   @ApiParam({

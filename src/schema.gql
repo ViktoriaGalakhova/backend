@@ -74,7 +74,7 @@ input CreateCafeLocationInput {
   address: String!
 
   """Ссылка на фотографию кофейни"""
-  imageUrl: String!
+  imageUrl: String
 
   """Название кофейни"""
   name: String!
@@ -107,7 +107,7 @@ input CreateProductInput {
   description: String
 
   """Ссылка на изображение позиции"""
-  imageUrl: String!
+  imageUrl: String
 
   """Название позиции"""
   name: String!

@@ -182,7 +182,8 @@ footer {
   background: #fff;
 }
 
-.load-time {
+.load-time,
+.server-time {
   margin-top: 10px;
   opacity: 0.9;
   font-size: 0.95em;

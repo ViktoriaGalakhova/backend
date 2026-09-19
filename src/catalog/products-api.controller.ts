@@ -12,9 +12,14 @@ import {
   Query,
   Req,
   Res,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
 import {
   ApiBadRequestResponse,
+  ApiBody,
+  ApiConsumes,
   ApiCreatedResponse,
   ApiNoContentResponse,
   ApiNotFoundResponse,
@@ -25,8 +30,11 @@ import {
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
 import { linkHeaderDoc } from '../common/api-link-header';
+import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
+import { EtagInterceptor } from '../common/interceptors/etag.interceptor';
 import { setLinkHeader } from '../common/pagination';
+import { imageFileBody, imageFilePipe } from '../storage/image-upload';
 import { CatalogService } from './catalog.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { PaginatedProductsDto } from './dto/paginated-catalog.dto';
@@ -39,11 +47,13 @@ import { UpdateProductDto } from './dto/update-product.dto';
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
 })
+@UseInterceptors(EtagInterceptor)
 @Controller('api/products')
 export class ProductsApiController {
   constructor(private readonly catalogService: CatalogService) {}
 
   @Get()
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить страницу позиций меню' })
   @ApiOkResponse({
     description: 'Страница позиций меню',
@@ -65,6 +75,7 @@ export class ProductsApiController {
   }
 
   @Get(':id')
+  @CacheControl(3600)
   @ApiOperation({ summary: 'Получить позицию меню по идентификатору' })
   @ApiParam({ name: 'id', description: 'Идентификатор позиции', example: 1 })
   @ApiOkResponse({ description: 'Позиция меню', type: ProductResponseDto })
@@ -106,6 +117,27 @@ export class ProductsApiController {
     @Body() dto: UpdateProductDto,
   ): Promise<ProductResponseDto> {
     return this.catalogService.updateProduct(id, dto);
+  }
+
+  @Post(':id/image')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody(imageFileBody)
+  @ApiOperation({ summary: 'Загрузить изображение позиции меню' })
+  @ApiParam({ name: 'id', description: 'Идентификатор позиции', example: 1 })
+  @ApiOkResponse({
+    description: 'Позиция с обновлённым изображением',
+    type: ProductResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Позиция не найдена',
+    type: ErrorResponseDto,
+  })
+  uploadImage(
+    @Param('id', ParseIntPipe) id: number,
+    @UploadedFile(imageFilePipe) file: Express.Multer.File,
+  ): Promise<ProductResponseDto> {
+    return this.catalogService.setProductImage(id, file);
   }
 
   @Delete(':id')

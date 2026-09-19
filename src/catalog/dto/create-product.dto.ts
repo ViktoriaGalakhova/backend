@@ -32,13 +32,15 @@ export class CreateProductDto {
   @Max(100000)
   price: number;
 
-  @ApiProperty({
-    description: 'Ссылка на изображение позиции',
-    example: '/media/cappuccino.png',
+  @ApiPropertyOptional({
+    description:
+      'Ссылка на изображение позиции. Обычно заполняется загрузкой файла в объектное хранилище.',
+    example: 'https://storage.yandexcloud.net/bucket/products/cappuccino.png',
   })
+  @IsOptional()
   @IsString()
-  @Length(1, 200)
-  imageUrl: string;
+  @Length(1, 300)
+  imageUrl?: string;
 
   @ApiPropertyOptional({
     description: 'Доступна ли позиция к заказу',
