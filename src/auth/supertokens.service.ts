@@ -78,9 +78,10 @@ export class SupertokensService {
             functions: (original) => ({
               ...original,
               createNewSession: async (input) => {
-                const user = await this.prisma.user.findUnique({
-                  where: { supertokensId: input.userId },
-                });
+                const user =
+                  (await this.prisma.user.findUnique({
+                    where: { supertokensId: input.userId },
+                  })) ?? (await this.restoreLocalUser(input.userId));
 
                 input.accessTokenPayload = {
                   userId: user?.id,
@@ -101,18 +102,29 @@ export class SupertokensService {
     supertokensId: string,
     email: string,
     displayName: string,
-  ): Promise<void> {
+  ) {
     const normalizedEmail = email.trim().toLowerCase();
 
-    await this.prisma.user.create({
+    return this.prisma.user.create({
       data: {
         supertokensId,
         email: normalizedEmail,
-        displayName: displayName.trim(),
+        displayName: displayName.trim() || normalizedEmail,
         role: this.options.adminEmails.includes(normalizedEmail)
           ? AppRole.Admin
           : AppRole.User,
       },
     });
+  }
+
+  private async restoreLocalUser(supertokensId: string) {
+    const account = await supertokens.getUser(supertokensId);
+    const email = account?.emails[0];
+
+    if (!email) {
+      return null;
+    }
+
+    return this.createLocalUser(supertokensId, email, email);
   }
 }
