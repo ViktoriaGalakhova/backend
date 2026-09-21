@@ -7,27 +7,26 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   Res,
   Sse,
 } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import type { Request, Response } from 'express';
-import { AuthService } from '../auth/auth.service';
+import type { Response } from 'express';
+import type { SessionUser } from '../auth/auth.types';
+import { Authenticated } from '../auth/decorators/authenticated.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
 import { ReviewsService } from './reviews.service';
 
+@PublicAccess()
 @ApiExcludeController()
 @Controller('reviews')
 export class ReviewsController {
-  constructor(
-    private readonly reviewsService: ReviewsService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly reviewsService: ReviewsService) {}
 
   @Get()
-  async getAll(@Req() req: Request) {
-    const user = await this.authService.getSessionUser(req);
-    return this.reviewsService.getAllForView(user?.id ?? null);
+  getAll(@CurrentUser() user: SessionUser | null) {
+    return this.reviewsService.getAllForView(user);
   }
 
   @Sse('events')
@@ -36,19 +35,16 @@ export class ReviewsController {
   }
 
   @Get(':id')
-  async getOne(@Req() req: Request, @Param('id') id: string) {
-    const user = await this.authService.getSessionUser(req);
-    return this.reviewsService.getOneForView(Number(id), user?.id ?? null);
+  getOne(@CurrentUser() user: SessionUser | null, @Param('id') id: string) {
+    return this.reviewsService.getOneForView(Number(id), user);
   }
 
   @Post()
   async create(
-    @Req() req: Request,
+    @CurrentUser() user: SessionUser | null,
     @Res() res: Response,
     @Body('comment') comment: string,
   ) {
-    const user = await this.authService.getSessionUser(req);
-
     if (!user) {
       return res.redirect(
         `/auth/login?next=${encodeURIComponent('/feedback')}&error=${encodeURIComponent('Чтобы оставить отзыв, сначала войдите в аккаунт.')}`,
@@ -56,7 +52,7 @@ export class ReviewsController {
     }
 
     try {
-      await this.reviewsService.create(user.id, comment);
+      await this.reviewsService.create(user, comment);
       return res.redirect(
         `/feedback?notice=${encodeURIComponent('Спасибо, отзыв опубликован.')}`,
       );
@@ -71,34 +67,21 @@ export class ReviewsController {
   }
 
   @Patch(':id')
+  @Authenticated()
   async update(
-    @Req() req: Request,
+    @CurrentUser() user: SessionUser,
     @Param('id') id: string,
     @Body('comment') comment: string,
   ) {
-    const user = await this.authService.getSessionUser(req);
+    const review = await this.reviewsService.update(Number(id), user, comment);
 
-    if (!user) {
-      throw new ForbiddenException('Сначала войдите в аккаунт.');
-    }
-
-    const review = await this.reviewsService.update(
-      Number(id),
-      user.id,
-      comment,
-    );
     return { review };
   }
 
   @Delete(':id')
-  async remove(@Req() req: Request, @Param('id') id: string) {
-    const user = await this.authService.getSessionUser(req);
-
-    if (!user) {
-      throw new ForbiddenException('Сначала войдите в аккаунт.');
-    }
-
-    await this.reviewsService.remove(Number(id), user.id);
+  @Authenticated()
+  async remove(@CurrentUser() user: SessionUser, @Param('id') id: string) {
+    await this.reviewsService.remove(Number(id), user);
     return { ok: true };
   }
 }

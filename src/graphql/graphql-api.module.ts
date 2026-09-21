@@ -21,6 +21,7 @@ import { UsersResolver } from './resolvers/users.resolver';
       autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
       sortSchema: true,
       playground: false,
+      introspection: true,
       plugins: [ApolloServerPluginLandingPageLocalDefault({ embed: true })],
     }),
     UsersModule,

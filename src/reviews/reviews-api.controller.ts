@@ -24,6 +24,10 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { AppRole } from '../auth/auth.types';
+import { Authenticated } from '../auth/decorators/authenticated.decorator';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { linkHeaderDoc } from '../common/api-link-header';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { setLinkHeader } from '../common/pagination';
@@ -37,6 +41,7 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 import { ReviewsService } from './reviews.service';
 
 @ApiTags('reviews')
+@PublicAccess()
 @ApiBadRequestResponse({
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
@@ -79,6 +84,7 @@ export class ReviewsApiController {
   }
 
   @Post()
+  @Authenticated()
   @ApiOperation({ summary: 'Создать отзыв' })
   @ApiCreatedResponse({ description: 'Отзыв создан', type: ReviewResponseDto })
   @ApiNotFoundResponse({
@@ -90,6 +96,7 @@ export class ReviewsApiController {
   }
 
   @Patch(':id')
+  @Authenticated()
   @ApiOperation({ summary: 'Изменить текст отзыва' })
   @ApiParam({ name: 'id', description: 'Идентификатор отзыва', example: 1 })
   @ApiOkResponse({ description: 'Обновлённый отзыв', type: ReviewResponseDto })
@@ -105,6 +112,7 @@ export class ReviewsApiController {
   }
 
   @Delete(':id')
+  @Roles(AppRole.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить отзыв' })
   @ApiParam({ name: 'id', description: 'Идентификатор отзыва', example: 1 })

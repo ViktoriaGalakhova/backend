@@ -8,9 +8,7 @@
   <section>
     <h2>{{authPage.title}}</h2>
 
-    <form class="form-card auth-card" method="post" action="/auth/register">
-      <input type="hidden" name="next" value="{{authPage.next}}">
-
+    <form class="form-card auth-card" id="registerForm" novalidate>
       <div class="form-row">
         <label for="registerName"><strong>Имя</strong></label>
         <input id="registerName" name="displayName" type="text" required minlength="2" maxlength="40" placeholder="Например, Анна">
@@ -23,14 +21,52 @@
 
       <div class="form-row">
         <label for="registerPassword"><strong>Пароль</strong></label>
-        <input id="registerPassword" name="password" type="password" required minlength="6" placeholder="Не менее 6 символов">
+        <input id="registerPassword" name="password" type="password" required minlength="8" placeholder="Не менее 8 символов, буквы и цифры">
       </div>
 
       <button type="submit" class="btn">Создать аккаунт</button>
+      <p class="edit-error" id="registerError" aria-live="polite"></p>
       <p class="small-muted">Уже зарегистрированы? <a href="/auth/login?next={{authPage.next}}">Войдите в аккаунт</a>.</p>
     </form>
   </section>
 </main>
+
+<script>
+  document.getElementById('registerForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const errorBox = document.getElementById('registerError');
+    errorBox.textContent = '';
+
+    const response = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', rid: 'emailpassword' },
+      credentials: 'include',
+      body: JSON.stringify({
+        formFields: [
+          { id: 'displayName', value: form.displayName.value.trim() },
+          { id: 'email', value: form.email.value.trim() },
+          { id: 'password', value: form.password.value },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'OK') {
+      window.location.href = '{{authPage.next}}';
+      return;
+    }
+
+    if (data.status === 'FIELD_ERROR') {
+      errorBox.textContent = data.formFields.map((field) => field.error).join(' ');
+      return;
+    }
+
+    errorBox.textContent = 'Аккаунт с таким email уже существует.';
+  });
+</script>
 
 {{> footer}}
 </body>

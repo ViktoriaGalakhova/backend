@@ -1,6 +1,13 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomBytes } from 'crypto';
-import { AuthService } from '../auth/auth.service';
+import supertokens from 'supertokens-node';
+import EmailPassword from 'supertokens-node/recipe/emailpassword';
+import RecipeUserId from 'supertokens-node/lib/build/recipeUserId';
+import { AppRole } from '../auth/auth.types';
 import { paginate, PaginatedResult } from '../common/pagination';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSessionDto } from './dto/create-session.dto';
@@ -14,18 +21,18 @@ type UserRecord = {
   id: number;
   displayName: string;
   email: string;
+  role: string;
   createdAt: Date;
   _count: { reviews: number };
 };
+
+const TENANT_ID = 'public';
 
 @Injectable()
 export class UsersService {
   private readonly defaultSessionTtlDays = 30;
 
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly authService: AuthService,
-  ) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async findAll(
     page: number,
@@ -63,12 +70,20 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto): Promise<UserResponseDto> {
-    const user = await this.prisma.user.create({
-      data: {
-        displayName: dto.displayName.trim(),
-        email: dto.email.trim().toLowerCase(),
-        passwordHash: await this.authService.hashPassword(dto.password),
-      },
+    const result = await EmailPassword.signUp(
+      TENANT_ID,
+      dto.email.trim().toLowerCase(),
+      dto.password,
+      undefined,
+      { displayName: dto.displayName.trim() },
+    );
+
+    if (result.status !== 'OK') {
+      throw new ConflictException('Аккаунт с таким email уже существует.');
+    }
+
+    const user = await this.prisma.user.findUniqueOrThrow({
+      where: { supertokensId: result.user.id },
       include: { _count: { select: { reviews: true } } },
     });
 
@@ -76,16 +91,27 @@ export class UsersService {
   }
 
   async update(userId: number, dto: UpdateUserDto): Promise<UserResponseDto> {
-    await this.findOne(userId);
+    const existing = await this.findRecordOrFail(userId);
+
+    if (dto.email || dto.password) {
+      const result = await EmailPassword.updateEmailOrPassword({
+        recipeUserId: new RecipeUserId(existing.supertokensId),
+        email: dto.email?.trim().toLowerCase(),
+        password: dto.password,
+      });
+
+      if (result.status !== 'OK') {
+        throw new ConflictException(
+          'Не удалось обновить учётные данные в сервисе аутентификации.',
+        );
+      }
+    }
 
     const user = await this.prisma.user.update({
       where: { id: userId },
       data: {
         displayName: dto.displayName?.trim(),
         email: dto.email?.trim().toLowerCase(),
-        passwordHash: dto.password
-          ? await this.authService.hashPassword(dto.password)
-          : undefined,
       },
       include: { _count: { select: { reviews: true } } },
     });
@@ -93,9 +119,32 @@ export class UsersService {
     return this.toUser(user);
   }
 
+  async changeRole(userId: number, role: AppRole): Promise<UserResponseDto> {
+    await this.findRecordOrFail(userId);
+
+    const user = await this.prisma.user.update({
+      where: { id: userId },
+      data: { role },
+      include: { _count: { select: { reviews: true } } },
+    });
+
+    return this.toUser(user);
+  }
+
   async remove(userId: number): Promise<void> {
-    await this.findOne(userId);
+    const existing = await this.findRecordOrFail(userId);
+    await supertokens.deleteUser(existing.supertokensId);
     await this.prisma.user.delete({ where: { id: userId } });
+  }
+
+  private async findRecordOrFail(userId: number) {
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('Пользователь не найден.');
+    }
+
+    return user;
   }
 
   async findSessions(
@@ -179,6 +228,7 @@ export class UsersService {
       id: user.id,
       displayName: user.displayName,
       email: user.email,
+      role: user.role as AppRole,
       reviewsCount: user._count.reviews,
       createdAt: user.createdAt,
     };

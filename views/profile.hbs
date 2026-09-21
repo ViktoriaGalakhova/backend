@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>Профиль</h2>
+
+    <div class="form-card">
+      <p><strong>Имя:</strong> {{session.userName}}</p>
+      <p><strong>Email:</strong> {{session.userEmail}}</p>
+      <p><strong>Роль:</strong> {{session.roleLabel}}</p>
+      <p><a href="{{session.logoutUrl}}">Выйти из аккаунта</a></p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Мои отзывы</h2>
+
+    <div class="list">
+      {{#each myReviews}}
+        <article class="item">
+          <div class="item-meta">{{createdAtLabel}}</div>
+          <p class="item-text">{{comment}}</p>
+        </article>
+      {{/each}}
+    </div>
+
+    {{#unless myReviews.length}}
+      <p class="empty-state">Вы ещё не оставляли отзывов.</p>
+    {{/unless}}
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

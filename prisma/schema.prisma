@@ -8,11 +8,12 @@ generator client {
 }
 
 model User {
-  id           Int      @id @default(autoincrement())
-  displayName  String
-  email        String   @unique
-  passwordHash String
-  createdAt    DateTime @default(now())
+  id            Int      @id @default(autoincrement())
+  supertokensId String   @unique
+  displayName   String
+  email         String   @unique
+  role          String   @default("user")
+  createdAt     DateTime @default(now())
 
   reviews  Review[]
   sessions Session[]

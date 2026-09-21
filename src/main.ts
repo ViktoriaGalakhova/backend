@@ -3,9 +3,11 @@ import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { join } from 'path';
+import supertokens from 'supertokens-node';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 import hbs = require('hbs');
 import { AppModule } from './app.module';
+import { AUTH_SECURITY_SCHEME } from './auth/auth.config';
 import { PrismaService } from './prisma/prisma.service';
 
 async function bootstrap(): Promise<void> {
@@ -15,6 +17,13 @@ async function bootstrap(): Promise<void> {
   app.setViewEngine('hbs');
 
   hbs.registerPartials(join(__dirname, '..', 'views', 'partials'));
+
+  app.enableCors({
+    origin: [process.env.WEBSITE_DOMAIN ?? 'http://localhost:3000'],
+    allowedHeaders: ['content-type', ...supertokens.getAllCORSHeaders()],
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -34,6 +43,17 @@ async function bootstrap(): Promise<void> {
     .addTag('reviews', 'Отзывы посетителей')
     .addTag('catalog', 'Разделы меню и позиции меню')
     .addTag('locations', 'Кофейни сети')
+    .addCookieAuth(
+      'sAccessToken',
+      {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'sAccessToken',
+        description:
+          'Access-токен SuperTokens. Войдите на /auth/login, cookie подставится автоматически.',
+      },
+      AUTH_SECURITY_SCHEME,
+    )
     .build();
 
   const document = SwaggerModule.createDocument(app, swaggerConfig);

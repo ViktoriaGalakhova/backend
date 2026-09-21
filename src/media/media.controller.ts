@@ -3,7 +3,9 @@ import { ApiExcludeController } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { access } from 'fs/promises';
 import { join } from 'path';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
 
+@PublicAccess()
 @ApiExcludeController()
 @Controller('media')
 export class MediaController {

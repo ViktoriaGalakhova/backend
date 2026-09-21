@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+{{> head}}
+<body>
+{{> header}}
+
+<main>
+  <section>
+    <h2>Админ-панель</h2>
+    <p class="small-muted">Страница доступна только пользователям с ролью администратора.</p>
+
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Имя</th>
+          <th>Email</th>
+          <th>Роль</th>
+          <th>Отзывов</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{#each users}}
+          <tr>
+            <td>{{id}}</td>
+            <td>{{displayName}}</td>
+            <td>{{email}}</td>
+            <td>{{role}}</td>
+            <td>{{reviewsCount}}</td>
+          </tr>
+        {{/each}}
+      </tbody>
+    </table>
+  </section>
+</main>
+
+{{> footer}}
+</body>
+</html>

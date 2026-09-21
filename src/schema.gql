@@ -436,6 +436,9 @@ type User {
   """Количество оставленных отзывов"""
   reviewsCount: Int!
 
+  """Роль пользователя в системе"""
+  role: String!
+
   """Сессии пользователя постранично"""
   sessions(pagination: PaginationInput! = {limit: 10, page: 1}): SessionPage!
 }

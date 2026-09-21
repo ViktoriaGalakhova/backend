@@ -26,6 +26,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { AppRole } from '../auth/auth.types';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { linkHeaderDoc } from '../common/api-link-header';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
@@ -44,6 +47,7 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 
 @ApiTags('catalog')
+@PublicAccess()
 @ApiBadRequestResponse({
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
@@ -88,6 +92,7 @@ export class CategoriesApiController {
   }
 
   @Post()
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Создать раздел меню' })
   @ApiCreatedResponse({
     description: 'Раздел создан',
@@ -102,6 +107,7 @@ export class CategoriesApiController {
   }
 
   @Patch(':id')
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Изменить раздел меню' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
   @ApiOkResponse({
@@ -124,6 +130,7 @@ export class CategoriesApiController {
   }
 
   @Delete(':id')
+  @Roles(AppRole.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить раздел меню вместе с его позициями' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
@@ -186,6 +193,7 @@ export class CategoriesApiController {
   }
 
   @Post(':id/products')
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Добавить позицию в выбранный раздел' })
   @ApiParam({ name: 'id', description: 'Идентификатор раздела', example: 1 })
   @ApiCreatedResponse({

@@ -8,9 +8,7 @@
   <section>
     <h2>{{authPage.title}}</h2>
 
-    <form class="form-card auth-card" method="post" action="/auth/login">
-      <input type="hidden" name="next" value="{{authPage.next}}">
-
+    <form class="form-card auth-card" id="loginForm" novalidate>
       <div class="form-row">
         <label for="loginEmail"><strong>Email</strong></label>
         <input id="loginEmail" name="email" type="email" required placeholder="name@example.com">
@@ -22,10 +20,47 @@
       </div>
 
       <button type="submit" class="btn">Войти</button>
+      <p class="edit-error" id="loginError" aria-live="polite"></p>
       <p class="small-muted">Если аккаунта ещё нет, <a href="/auth/register?next={{authPage.next}}">зарегистрируйтесь</a>.</p>
     </form>
   </section>
 </main>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit', async (event) => {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const errorBox = document.getElementById('loginError');
+    errorBox.textContent = '';
+
+    const response = await fetch('/api/auth/signin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', rid: 'emailpassword' },
+      credentials: 'include',
+      body: JSON.stringify({
+        formFields: [
+          { id: 'email', value: form.email.value.trim() },
+          { id: 'password', value: form.password.value },
+        ],
+      }),
+    });
+
+    const data = await response.json();
+
+    if (data.status === 'OK') {
+      window.location.href = '{{authPage.next}}';
+      return;
+    }
+
+    if (data.status === 'FIELD_ERROR') {
+      errorBox.textContent = data.formFields.map((field) => field.error).join(' ');
+      return;
+    }
+
+    errorBox.textContent = 'Неверный email или пароль.';
+  });
+</script>
 
 {{> footer}}
 </body>

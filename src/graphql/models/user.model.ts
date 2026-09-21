@@ -12,6 +12,9 @@ export class User {
   @Field(() => String, { description: 'Электронная почта' })
   email: string;
 
+  @Field(() => String, { description: 'Роль пользователя в системе' })
+  role: string;
+
   @Field(() => Int, { description: 'Количество оставленных отзывов' })
   reviewsCount: number;
 

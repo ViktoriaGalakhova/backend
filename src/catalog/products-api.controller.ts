@@ -29,6 +29,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { AppRole } from '../auth/auth.types';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { linkHeaderDoc } from '../common/api-link-header';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
@@ -43,6 +46,7 @@ import { ProductResponseDto } from './dto/product-response.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
 @ApiTags('catalog')
+@PublicAccess()
 @ApiBadRequestResponse({
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
@@ -88,6 +92,7 @@ export class ProductsApiController {
   }
 
   @Post()
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Создать позицию меню' })
   @ApiCreatedResponse({
     description: 'Позиция создана',
@@ -102,6 +107,7 @@ export class ProductsApiController {
   }
 
   @Patch(':id')
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Изменить позицию меню' })
   @ApiParam({ name: 'id', description: 'Идентификатор позиции', example: 1 })
   @ApiOkResponse({
@@ -120,6 +126,7 @@ export class ProductsApiController {
   }
 
   @Post(':id/image')
+  @Roles(AppRole.Admin)
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody(imageFileBody)
@@ -141,6 +148,7 @@ export class ProductsApiController {
   }
 
   @Delete(':id')
+  @Roles(AppRole.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить позицию меню' })
   @ApiParam({ name: 'id', description: 'Идентификатор позиции', example: 1 })

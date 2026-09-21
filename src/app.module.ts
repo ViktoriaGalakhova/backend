@@ -28,7 +28,20 @@ import { UsersModule } from './users/users.module';
     SeedModule,
     PagesDataModule,
     PagesModule,
-    AuthModule,
+    AuthModule.forRoot({
+      connectionUri:
+        process.env.SUPERTOKENS_CONNECTION_URI ?? 'https://try.supertokens.com',
+      apiKey: process.env.SUPERTOKENS_API_KEY,
+      appName: process.env.SUPERTOKENS_APP_NAME ?? 'British Coffee Shop',
+      apiDomain: process.env.API_DOMAIN ?? 'http://localhost:3000',
+      websiteDomain: process.env.WEBSITE_DOMAIN ?? 'http://localhost:3000',
+      apiBasePath: '/api/auth',
+      websiteBasePath: '/auth',
+      adminEmails: (process.env.ADMIN_EMAILS ?? '')
+        .split(',')
+        .map((email) => email.trim().toLowerCase())
+        .filter(Boolean),
+    }),
     UsersModule,
     ReviewsModule,
     CatalogModule,

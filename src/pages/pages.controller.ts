@@ -1,32 +1,35 @@
-import { Controller, Get, Query, Render, Req } from '@nestjs/common';
+import { Controller, Get, Query, Render } from '@nestjs/common';
 import { ApiExcludeController } from '@nestjs/swagger';
-import type { Request } from 'express';
-import { AuthService } from '../auth/auth.service';
+import type { SessionUser } from '../auth/auth.types';
+import { AppRole } from '../auth/auth.types';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { CatalogService } from '../catalog/catalog.service';
 import { LocationsService } from '../locations/locations.service';
 import { ReviewsService } from '../reviews/reviews.service';
+import { UsersService } from '../users/users.service';
 import { PagesService } from './pages.service';
 
+@PublicAccess()
 @ApiExcludeController()
 @Controller()
 export class PagesController {
   constructor(
     private readonly pagesService: PagesService,
-    private readonly authService: AuthService,
     private readonly reviewsService: ReviewsService,
     private readonly catalogService: CatalogService,
     private readonly locationsService: LocationsService,
+    private readonly usersService: UsersService,
   ) {}
 
   @Get()
   @Render('index')
-  async getIndexPage(
-    @Req() req: Request,
+  getIndexPage(
+    @CurrentUser() user: SessionUser | null,
     @Query('notice') notice?: string,
     @Query('error') error?: string,
   ) {
-    const user = await this.authService.getSessionUser(req);
-
     return this.pagesService.buildPageModel(
       '/',
       'British Coffee Shop',
@@ -39,12 +42,10 @@ export class PagesController {
   @Get('/menu')
   @Render('menu')
   async getMenuPage(
-    @Req() req: Request,
+    @CurrentUser() user: SessionUser | null,
     @Query('notice') notice?: string,
     @Query('error') error?: string,
   ) {
-    const user = await this.authService.getSessionUser(req);
-
     return {
       ...this.pagesService.buildPageModel(
         '/menu',
@@ -59,9 +60,7 @@ export class PagesController {
 
   @Get('/table')
   @Render('table')
-  async getTablePage(@Req() req: Request) {
-    const user = await this.authService.getSessionUser(req);
-
+  getTablePage(@CurrentUser() user: SessionUser | null) {
     return {
       ...this.pagesService.buildPageModel(
         '/table',
@@ -74,9 +73,7 @@ export class PagesController {
 
   @Get('/addresses')
   @Render('addresses')
-  async getAddressesPage(@Req() req: Request) {
-    const user = await this.authService.getSessionUser(req);
-
+  async getAddressesPage(@CurrentUser() user: SessionUser | null) {
     return {
       ...this.pagesService.buildPageModel(
         '/addresses',
@@ -89,9 +86,7 @@ export class PagesController {
 
   @Get('/coffee')
   @Render('coffee')
-  async getCoffeePage(@Req() req: Request) {
-    const user = await this.authService.getSessionUser(req);
-
+  getCoffeePage(@CurrentUser() user: SessionUser | null) {
     return {
       ...this.pagesService.buildPageModel(
         '/coffee',
@@ -105,12 +100,11 @@ export class PagesController {
   @Get('/feedback')
   @Render('feedback')
   async getFeedbackPage(
-    @Req() req: Request,
+    @CurrentUser() user: SessionUser | null,
     @Query('notice') notice?: string,
     @Query('error') error?: string,
   ) {
-    const user = await this.authService.getSessionUser(req);
-    const reviews = await this.reviewsService.getAllForView(user?.id ?? null);
+    const reviews = await this.reviewsService.getAllForView(user);
 
     return {
       ...this.pagesService.buildPageModel(
@@ -122,6 +116,37 @@ export class PagesController {
       ),
       reviews,
       canLeaveReview: Boolean(user),
+    };
+  }
+
+  @Get('/profile')
+  @Render('profile')
+  async getProfilePage(@CurrentUser() user: SessionUser | null) {
+    const reviews = await this.reviewsService.getAllForView(user);
+
+    return {
+      ...this.pagesService.buildPageModel(
+        '/profile',
+        'Профиль | British Coffee Shop',
+        user,
+      ),
+      myReviews: reviews.filter((review) => review.authorId === user?.id),
+    };
+  }
+
+  @Get('/admin')
+  @Roles(AppRole.Admin)
+  @Render('admin')
+  async getAdminPage(@CurrentUser() user: SessionUser | null) {
+    const users = await this.usersService.findAll(1, 100);
+
+    return {
+      ...this.pagesService.buildPageModel(
+        '/admin',
+        'Админ-панель | British Coffee Shop',
+        user,
+      ),
+      users: users.items,
     };
   }
 }

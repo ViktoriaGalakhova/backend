@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { AppRole } from '../../auth/auth.types';
 import { PaginationMetaDto } from '../../common/dto/pagination-meta.dto';
 
 export class UserResponseDto {
@@ -13,6 +14,13 @@ export class UserResponseDto {
     example: 'user@example.com',
   })
   email: string;
+
+  @ApiProperty({
+    description: 'Роль пользователя в системе',
+    enum: AppRole,
+    example: AppRole.User,
+  })
+  role: AppRole;
 
   @ApiProperty({ description: 'Количество отзывов пользователя', example: 2 })
   reviewsCount: number;

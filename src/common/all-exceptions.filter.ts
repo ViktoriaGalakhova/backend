@@ -7,7 +7,9 @@ import {
 } from '@nestjs/common';
 import { GqlContextType } from '@nestjs/graphql';
 import { Prisma } from '@prisma/client';
-import type { Request, Response } from 'express';
+import type { ErrorRequestHandler, Request, Response } from 'express';
+import SupertokensError from 'supertokens-node/lib/build/error';
+import { errorHandler } from 'supertokens-node/framework/express';
 import { PagesService } from '../pages/pages.service';
 
 type NormalizedError = {
@@ -17,6 +19,9 @@ type NormalizedError = {
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
+  private readonly supertokensErrorHandler: ErrorRequestHandler =
+    errorHandler();
+
   constructor(private readonly pagesService: PagesService) {}
 
   catch(exception: unknown, host: ArgumentsHost): unknown {
@@ -27,6 +32,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const context = host.switchToHttp();
     const request = context.getRequest<Request>();
     const response = context.getResponse<Response>();
+
+    if (SupertokensError.isErrorFromSuperTokens(exception)) {
+      this.supertokensErrorHandler(exception, request, response, () => {});
+      return undefined;
+    }
+
     const { statusCode, message } = this.normalize(exception);
 
     if (this.wantsJson(request)) {

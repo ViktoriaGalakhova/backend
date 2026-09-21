@@ -25,6 +25,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { AppRole } from '../auth/auth.types';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { linkHeaderDoc } from '../common/api-link-header';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
 import { PaginationQueryDto } from '../common/dto/pagination-query.dto';
@@ -40,12 +42,14 @@ import {
   PaginatedSessionsDto,
   SessionResponseDto,
 } from './dto/session-response.dto';
+import { ChangeRoleDto } from './dto/change-role.dto';
 import { UpdateSessionDto } from './dto/update-session.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { PaginatedUsersDto, UserResponseDto } from './dto/user-response.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
+@Roles(AppRole.Admin)
 @ApiBadRequestResponse({
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
@@ -145,6 +149,28 @@ export class UsersApiController {
   })
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.usersService.remove(id);
+  }
+
+  @Patch(':id/role')
+  @ApiOperation({ summary: 'Изменить роль пользователя' })
+  @ApiParam({
+    name: 'id',
+    description: 'Идентификатор пользователя',
+    example: 1,
+  })
+  @ApiOkResponse({
+    description: 'Пользователь с новой ролью',
+    type: UserResponseDto,
+  })
+  @ApiNotFoundResponse({
+    description: 'Пользователь не найден',
+    type: ErrorResponseDto,
+  })
+  changeRole(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: ChangeRoleDto,
+  ): Promise<UserResponseDto> {
+    return this.usersService.changeRole(id, dto.role);
   }
 
   @Get(':id/reviews')

@@ -29,6 +29,9 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import type { Request, Response } from 'express';
+import { AppRole } from '../auth/auth.types';
+import { PublicAccess } from '../auth/decorators/public-access.decorator';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { linkHeaderDoc } from '../common/api-link-header';
 import { CacheControl } from '../common/decorators/cache-control.decorator';
 import { ErrorResponseDto } from '../common/dto/error-response.dto';
@@ -45,6 +48,7 @@ import { UpdateLocationDto } from './dto/update-location.dto';
 import { LocationsService } from './locations.service';
 
 @ApiTags('locations')
+@PublicAccess()
 @ApiBadRequestResponse({
   description: 'Некорректные параметры запроса или тело запроса',
   type: ErrorResponseDto,
@@ -86,6 +90,7 @@ export class LocationsApiController {
   }
 
   @Post()
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Добавить кофейню' })
   @ApiCreatedResponse({
     description: 'Кофейня создана',
@@ -96,6 +101,7 @@ export class LocationsApiController {
   }
 
   @Patch(':id')
+  @Roles(AppRole.Admin)
   @ApiOperation({ summary: 'Изменить кофейню' })
   @ApiParam({ name: 'id', description: 'Идентификатор кофейни', example: 1 })
   @ApiOkResponse({
@@ -114,6 +120,7 @@ export class LocationsApiController {
   }
 
   @Post(':id/image')
+  @Roles(AppRole.Admin)
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody(imageFileBody)
@@ -135,6 +142,7 @@ export class LocationsApiController {
   }
 
   @Delete(':id')
+  @Roles(AppRole.Admin)
   @HttpCode(HttpStatus.NO_CONTENT)
   @ApiOperation({ summary: 'Удалить кофейню' })
   @ApiParam({ name: 'id', description: 'Идентификатор кофейни', example: 1 })

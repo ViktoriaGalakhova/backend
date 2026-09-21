@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { SessionUser } from '../auth/auth.service';
+import type { SessionUser } from '../auth/auth.types';
 
 type NoticeType = 'success' | 'error' | 'info';
 
@@ -67,10 +67,14 @@ export class PagesService {
     noticeText?: string,
     noticeType: NoticeType = 'info',
   ) {
+    const navItems = user?.isAdmin
+      ? [...this.navItems, { href: '/admin', label: 'Админ-панель' }]
+      : this.navItems;
+
     return {
       pageTitle,
       currentPath,
-      navItems: this.navItems.map((item) => ({
+      navItems: navItems.map((item) => ({
         ...item,
         isActive: item.href === currentPath,
       })),
@@ -78,6 +82,9 @@ export class PagesService {
         isAuthenticated: Boolean(user),
         userId: user?.id ?? null,
         userName: user?.displayName ?? '',
+        userEmail: user?.email ?? '',
+        isAdmin: user?.isAdmin ?? false,
+        roleLabel: user?.isAdmin ? 'администратор' : 'пользователь',
         loginUrl: `/auth/login?next=${encodeURIComponent(currentPath)}`,
         registerUrl: `/auth/register?next=${encodeURIComponent(currentPath)}`,
         logoutUrl: `/auth/logout?next=${encodeURIComponent(currentPath)}`,

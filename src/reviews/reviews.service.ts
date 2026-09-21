@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import type { MessageEvent } from '@nestjs/common';
 import { Subject } from 'rxjs';
+import type { SessionUser } from '../auth/auth.types';
 import { PrismaService } from '../prisma/prisma.service';
 import { paginate, PaginatedResult } from '../common/pagination';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -38,45 +39,45 @@ export class ReviewsService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getAllForView(currentUserId: number | null): Promise<ReviewView[]> {
+  async getAllForView(user: SessionUser | null): Promise<ReviewView[]> {
     const reviews = await this.prisma.review.findMany({
       include: { author: true },
       orderBy: { createdAt: 'desc' },
     });
 
-    return reviews.map((review) => this.toReviewView(review, currentUserId));
+    return reviews.map((review) => this.toReviewView(review, user));
   }
 
   async getOneForView(
     reviewId: number,
-    currentUserId: number | null,
+    user: SessionUser | null,
   ): Promise<ReviewView> {
     const review = await this.findReviewOrFail(reviewId);
-    return this.toReviewView(review, currentUserId);
+    return this.toReviewView(review, user);
   }
 
-  async create(authorId: number, comment: string): Promise<ReviewView> {
+  async create(user: SessionUser, comment: string): Promise<ReviewView> {
     const review = await this.prisma.review.create({
       data: {
-        authorId,
+        authorId: user.id,
         comment: this.normalizeComment(comment),
       },
       include: { author: true },
     });
 
-    const view = this.toReviewView(review, authorId);
+    const view = this.toReviewView(review, user);
     this.emit('created', view);
     return view;
   }
 
   async update(
     reviewId: number,
-    authorId: number,
+    user: SessionUser,
     comment: string,
   ): Promise<ReviewView> {
     const review = await this.findReviewOrFail(reviewId);
 
-    if (review.authorId !== authorId) {
+    if (review.authorId !== user.id && !user.isAdmin) {
       throw new ForbiddenException('Можно редактировать только свои отзывы.');
     }
 
@@ -86,20 +87,20 @@ export class ReviewsService {
       include: { author: true },
     });
 
-    const view = this.toReviewView(updatedReview, authorId);
+    const view = this.toReviewView(updatedReview, user);
     this.emit('updated', view);
     return view;
   }
 
-  async remove(reviewId: number, authorId: number): Promise<void> {
+  async remove(reviewId: number, user: SessionUser): Promise<void> {
     const review = await this.findReviewOrFail(reviewId);
 
-    if (review.authorId !== authorId) {
+    if (review.authorId !== user.id && !user.isAdmin) {
       throw new ForbiddenException('Можно удалять только свои отзывы.');
     }
 
     await this.prisma.review.delete({ where: { id: reviewId } });
-    this.emitDeleted(this.toReviewView(review, authorId));
+    this.emitDeleted(this.toReviewView(review, user));
   }
 
   async findAll(
@@ -236,7 +237,7 @@ export class ReviewsService {
 
   private toReviewView(
     review: ReviewWithAuthor,
-    currentUserId: number | null,
+    user: SessionUser | null,
   ): ReviewView {
     return {
       id: review.id,
@@ -247,7 +248,7 @@ export class ReviewsService {
       createdAtLabel: this.formatDate(review.createdAt),
       updatedAtLabel: this.formatDate(review.updatedAt),
       wasEdited: review.updatedAt.getTime() !== review.createdAt.getTime(),
-      canManage: review.authorId === currentUserId,
+      canManage: Boolean(user && (user.isAdmin || review.authorId === user.id)),
     };
   }
 
